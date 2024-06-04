@@ -34,12 +34,21 @@ remove k (EqMap m) = EqMap (deleteByKey k m)
   where
     deleteByKey key (EqSet xs) = EqSet (filter ((/= key) . fst) xs)
 lookup :: Eq k => k -> EqMap k v -> Maybe v
+lookup k (EqMap (EqSet xs)) = lookup k xs
+  where
+    lookup _ [] = Nothing
+    lookup key ((k, v):kvs)
+      | key == k = Just v
+      | otherwise = lookup key kvs
 assocs :: EqMap k v -> [(k, v)]
 
 instance (Eq k, Eq v) => Eq (EqMap k v)
 instance (Show k, Show v) => Show (EqMap k v)
-instance Eq k => Semigroup (EqMap k v)
-instance Eq k => Monoid (EqMap k v)
+instance Eq k => Semigroup (EqMap k v) where
+  (EqMap m1) <> (EqMap m2) = EqMap (foldr (uncurry EqMap.insert) m1 (elems m2))
+instance Eq k => Monoid (EqMap k v) where
+  mempty = EqMap empty
+  mappend = (<>)
 newtype CombiningMap k v = CombiningMap {getCombiningMap :: EqMap k v}
 instance (Eq k, Semigroup v) => Semigroup (CombiningMap k v)
 instance (Eq k, Semigroup v) => Monoid (CombiningMap k v)
