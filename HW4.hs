@@ -142,11 +142,11 @@ instance (Metric a, Metric b) => Metric (ManhattanTuple a b) where
 
 -- Just and Nothing have distance of infinity.
 -- Two Justs measure the distance between the two values.
-instance Metric a => Metric (Maybe a)
-distance :: Metric a => Maybe a -> Maybe a -> Double
-distance Nothing Nothing = 0                                              -- should be infinity?
-distance (Just x1) (Just x2) = distance x1 x2
-distance _ _ = infinity
+instance Metric a => Metric (Maybe a) where
+  distance :: Metric a => Maybe a -> Maybe a -> Double
+  distance Nothing Nothing = 0                                              -- should be infinity?
+  distance (Just x1) (Just x2) = distance x1 x2
+  distance _ _ = infinity
 
 -- Left and Right have a distance of infinity.
 -- Same constructores measure the distance between the two values.
@@ -161,8 +161,8 @@ instance (Metric a, Metric b) => Metric (Either a b) where
 -- Euclidean distance.
 instance Metric a => Metric [a] where
   distance :: Metric a => [a] -> [a] -> Double
+  distance [] [] = 0
   distance xs ys
-    | distance [] [] = 0
     | length xs /= length ys = infinity
     | otherwise = sqrt . sum $ zipWith (\x y -> distance x y ** 2) xs ys
 
@@ -191,9 +191,9 @@ metricBubbleSort d xs = bubbleSort d xs
   where
     bubbleSort _ [] = []
     bubbleSort _ [x] = [x]
-    bubbleSort d (x:y:xs)
-      | distance x y >= d && x > y = y : bubbleSort d (x:xs)
-      | otherwise = x : bubbleSort d (y:xs)
+    bubbleSort a (x:y:xz)
+      | distance x y >= a && x > y = y : bubbleSort a (x:xz)
+      | otherwise = x : bubbleSort a (y:xz)
 -- Similar to the above, but uses a function to extract the value used for sorting.
 metricBubbleSortOn :: (Metric b, Ord b) => (a -> b) -> Double -> [a] -> [a]
 metricBubbleSortOn _ _ [] = []
@@ -207,3 +207,4 @@ metricBubbleSortOn f d xs = bubbleSort d xs
 
 -- Bonus (10 points).
 clusters :: Metric a => [a] -> [[a]]
+clusters = undefined

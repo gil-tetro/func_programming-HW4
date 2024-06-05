@@ -38,9 +38,9 @@ assocs :: EqMap k v -> [(k, v)]
 assocs (EqMap m) = map (\(Arg k v) -> (k, v)) (EqSet.elems m)
 
 instance (Eq k, Eq v) => Eq (EqMap k v) where
-EqMap xs == EqMap ys = xs EqSet.== ys
+  EqMap xs == EqMap ys = xs == ys
 instance (Show k, Show v) => Show (EqMap k v) where
-show (EqMap xs) = "{" ++ intercalate ", " (map showPair (EqSet.elems xs)) ++ "}"
+  show (EqMap xs) = "{" ++ intercalate ", " (map showPair (EqSet.elems xs)) ++ "}"
     where
       showPair (Arg k v) = Prelude.show k ++ "->" ++ Prelude.show v
 instance Eq k => Semigroup (EqMap k v) where
