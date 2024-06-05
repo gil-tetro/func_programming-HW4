@@ -25,7 +25,7 @@ newtype EqMap k v = EqMap (EqSet (Arg k v))
 empty :: EqMap k v
 empty = EqMap EqSet.empty
 member :: Eq k => k -> EqMap k v -> Bool
-member k (EqMap m) = any (\(Arg k' _) -> k Prelude.== k') (EqSet.elems m)
+member k (EqMap m) = any (\(Arg k' _) -> k == k') (EqSet.elems m)
 insert :: Eq k => k -> v -> EqMap k v -> EqMap k v
 insert k v (EqMap m) = EqMap (EqSet.insert (Arg k v) (removeKey k m))
   where
