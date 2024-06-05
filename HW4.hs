@@ -82,27 +82,27 @@ instance Serializable a => Serializable [a] where
     where
       serializedLen = length (serialize (undefined :: a))
       splitAtEach _ [] = []
-      splitAtEach n xs = take n xs : splitAtEach n (drop n xs)
+      splitAtEach n xz = take n xs : splitAtEach n (drop n xz)
   deserialize _ = error "Invalid input for list deserialization"
 instance (Serializable a, Eq a) => Serializable (EqSet a)  where
   serialize :: EqSet a -> [Int]
-  serialize s = length (elems s) : concatMap serialize (elems s)
+  serialize s = length (EqSet.elems s) : concatMap serialize (EqSet.elems s)
 
   deserialize :: [Int] -> EqSet a
   deserialize (len:xs) = foldr insertElem empty (splitAtEach serializedLen (drop 1 xs))
     where
       insertElem x = EqSet.insert (deserialize x)
-      empty = ES.empty
+      empty = EqSet.empty
       serializedLen = length (serialize (undefined :: a))
       splitAtEach _ [] = []
       splitAtEach n ys = take n ys : splitAtEach n (drop n ys)
   deserialize _ = error "Invalid input for EqSet deserialization"
 instance (Serializable k, Eq k, Serializable v) => Serializable (EqMap k v) where
   serialize :: EqMap k v -> [Int]
-  serialize m = length (assocs m) : concatMap (\(k, v) -> serialize k ++ serialize v) (assocs m)
+  serialize m = length (EqMap.assocs m) : concatMap (\(k, v) -> serialize k ++ serialize v) (EqMap.assocs m)
 
   deserialize :: [Int] -> EqMap k v
-  deserialize (len:xs) = foldr insertPair EM.empty (splitAtEach serializedPairLen (drop 1 xs))
+  deserialize (len:xs) = foldr insertPair EqMap.empty (splitAtEach serializedPairLen (drop 1 xs))
     where
       insertPair [k, v] = EqMap.insert (deserialize k) (deserialize v)
       serializedKLen = length (serialize (undefined :: k))
@@ -144,7 +144,7 @@ instance (Metric a, Metric b) => Metric (ManhattanTuple a b) where
 -- Two Justs measure the distance between the two values.
 instance Metric a => Metric (Maybe a) where
   distance :: Metric a => Maybe a -> Maybe a -> Double
-  distance Nothing Nothing = 0                                              -- should be infinity?
+  distance Nothing Nothing = 0
   distance (Just x1) (Just x2) = distance x1 x2
   distance _ _ = infinity
 
