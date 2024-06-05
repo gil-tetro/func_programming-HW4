@@ -20,7 +20,7 @@ newtype EqSet a = EqSet {getSet :: [a]}
 empty :: EqSet a
 empty = EqSet []
 member :: Eq a => a -> EqSet a -> Bool
-member x = elem x . getSet --(EqSet xs) = x `elem` xs
+member x = elem x . getSet
 insert :: Eq a => a -> EqSet a -> EqSet a
 insert x (EqSet xs)
   | x `elem` xs = EqSet xs
