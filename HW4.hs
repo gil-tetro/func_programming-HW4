@@ -45,7 +45,7 @@ instance Serializable Char where
   serialize c = [ord c]
   deserialize :: [Int] -> Char
   deserialize [c] = chr c
-  deserialize _ = "Invaild input for Char deserializetion"
+  deserialize _ = error "Invaild input for Char deserializetion"
 instance Serializable a => Serializable (Maybe a) where
   serialize :: Maybe a -> [Int]
   serialize Nothing = [0]
@@ -201,9 +201,9 @@ metricBubbleSortOn f d xs = bubbleSort d xs
   where
     bubbleSort _ [] = []
     bubbleSort _ [x] = [x]
-    bubbleSort d (x:y:xs)
-      | distance (f x) (f y) >= d && f x > f y = y : bubbleSort d (x:xs)
-      | otherwise = x : bubbleSort d (y:xs)
+    bubbleSort c (x:y:xz)
+      | distance (f x) (f y) >= c && f x > f y = y : bubbleSort c (x:xz)
+      | otherwise = x : bubbleSort c (y:xz)
 
 -- Bonus (10 points).
 clusters :: Metric a => [a] -> [[a]]
