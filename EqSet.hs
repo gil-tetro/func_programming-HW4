@@ -6,6 +6,7 @@ module EqSet (
   EqSet,
   empty,
   EqSet.insert, -- To avoid name clash with Data.List.insert
+  EqSet.fromList,
   member,
   remove,
   elems,
@@ -29,6 +30,9 @@ remove :: Eq a => a -> EqSet a -> EqSet a
 remove x (EqSet xs) = EqSet (filter (/= x) xs)
 elems :: EqSet a -> [a]
 elems (EqSet xs) = xs
+
+fromList :: (Eq a) => [a] -> EqSet a
+fromList = foldr EqSet.insert empty
 
 instance Eq a => Eq (EqSet a) where
   (EqSet xs) == (EqSet ys) = null (xs \\ ys) && null (ys \\ xs)

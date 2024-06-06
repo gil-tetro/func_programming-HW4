@@ -74,43 +74,26 @@ instance (Serializable a, Serializable b) => Serializable (Either a b) where
   deserialize (1:xs) = Right (deserialize xs)
   deserialize _ = error "Invalid input for Either deserialization"
 instance Serializable a => Serializable [a] where
-  serialize :: [a] -> [Int]
-  serialize xs = length xs : concatMap serialize xs
-
-  deserialize :: [Int] -> [a]
-  deserialize (len:xs) = map deserialize (splitAtEach serializedLen (drop 1 xs))
+  serialize xs = length xs : concatMap (\x -> length (serialize x) : serialize x) xs
+  deserialize [] = []
+  deserialize (x:xs) = deserializeFromList x xs
     where
-      serializedLen = length (serialize (undefined :: a))
-      splitAtEach _ [] = []
-      splitAtEach n xz = take n xs : splitAtEach n (drop n xz)
-  deserialize _ = error "Invalid input for list deserialization"
+      deserializeFromList 0 _ = []
+      deserializeFromList x' (len:rest) =
+          let (n, rest') = splitAt len rest
+          in deserialize n : deserializeFromList (x' - 1) rest'
+      deserializeFromList _ _ = error "Invalid serialization for list"
 instance (Serializable a, Eq a) => Serializable (EqSet a)  where
-  serialize :: EqSet a -> [Int]
-  serialize s = length (EqSet.elems s) : concatMap serialize (EqSet.elems s)
-
-  deserialize :: [Int] -> EqSet a
-  deserialize (len:xs) = foldr insertElem empty (splitAtEach serializedLen (drop 1 xs))
-    where
-      insertElem x = EqSet.insert (deserialize x)
-      empty = EqSet.empty
-      serializedLen = length (serialize (undefined :: a))
-      splitAtEach _ [] = []
-      splitAtEach n ys = take n ys : splitAtEach n (drop n ys)
-  deserialize _ = error "Invalid input for EqSet deserialization"
+  serialize = serialize . EqSet.elems
+  deserialize = EqSet.fromList . deserialize
 instance (Serializable k, Eq k, Serializable v) => Serializable (EqMap k v) where
-  serialize :: EqMap k v -> [Int]
-  serialize m = length (EqMap.assocs m) : concatMap (\(k, v) -> serialize k ++ serialize v) (EqMap.assocs m)
-
-  deserialize :: [Int] -> EqMap k v
-  deserialize (len:xs) = foldr insertPair EqMap.empty (splitAtEach serializedPairLen (drop 1 xs))
+  serialize m = concatMap serializeLength (EqMap.assocs m) 
     where
-      insertPair [k, v] = EqMap.insert (deserialize k) (deserialize v)
-      serializedKLen = length (serialize (undefined :: k))
-      serializedVLen = length (serialize (undefined :: v))
-      serializedPairLen = serializedKLen + serializedVLen
-      splitAtEach _ [] = []
-      splitAtEach n ys = take n ys : splitAtEach n (drop n ys)
-  deserialize _ = error "Invalid input for EqMap deserialization"
+      serializeLength (k, v) = length (serialize k) : length (serialize v) : (serialize k ++ serialize v)
+
+  deserialize [] = EqMap.empty
+  deserialize (xs : (ys : zs)) = EqMap.insert (deserialize (take xs zs)) (deserialize (take ys (drop xs zs))) (deserialize (drop (xs + ys) zs))
+  deserialize _ = error "Invalid serialization for EqMap"
 
 -- Section 3: Metric
 infinity :: Double
@@ -132,7 +115,7 @@ instance Metric Char where
 -- Euclidean distance
 instance (Metric a, Metric b) => Metric (a, b) where
   distance :: (Metric a, Metric b) => (a, b) -> (a, b) -> Double
-  distance (x1, y1) (x2, y2) = sqrt distance x1 x2 ** 2 + distance y1 y2 ** 2
+  distance (x1, y1) (x2, y2) = sqrt $ distance x1 x2 ** 2 + distance y1 y2 ** 2
 
 data ManhattanTuple a b = ManhattanTuple a b deriving Eq
 instance (Metric a, Metric b) => Metric (ManhattanTuple a b) where
